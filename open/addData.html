@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="stylesheet" type="text/css" href="styles.css">
+<meta charset="UTF-8">
+<title>Бронирование парковочного места</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 10px;
+}
+.editBtn, .deleteBtn {
+  margin: 0 15px;
+}
+#userData th:last-child, #userData td:last-child {
+  width: 50px;
+}
+#userData th:first-child, #userData td:first-child {
+  width: 50px;
+}
+#userData th:nth-child(2), #userData td:nth-child(2) {
+  width: 50px;
+}
+#userData th:nth-child(3), #userData td:nth-child(3) {
+  width: 50px;
+}
+#userData th:nth-child(4), #userData td:nth-child(4) {
+  width: 50px;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.4);
+  padding-top: 60px;
+}
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+h2 {
+  background-color: #01353e;
+  color: white;
+  margin: 0;
+  padding: 10px 0;
+  text-align: center;
+  width: 100%;
+}
+.main-button {
+  padding: 8px 16px;
+  background-color: #1a846c; /* Зеленый цвет фона */
+  color: white; /* Белый текст */
+  text-decoration: none; /* Убрать подчеркивание текста */
+  font-size: 16px; /* Размер шрифта */
+  border: none; /* Убрать границу */
+  cursor: pointer; /* Курсор в виде указателя */
+  border-radius: 4px; /* Скругление углов */
+  margin-right: auto; /* Автоматический отступ справа */
+}
+.header {
+  background-color: #01353e; /* Цвет фона хэдера */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px; /* Отступы внутри хэдера */
+}
+
+.main-button {
+  background-color: #01353e; /* Зеленый цвет фона кнопки */
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="../index.html" class="main-button">Главная</a>
+    <h2>Бронирование парковочного места</h2>
+  </div>
+
+<form id="userDataForm">
+  Имя: <input type="text" name="name" required>
+  Номер места: <select name="parkingSpot" required>
+    <option value="A1">A1</option>
+    <option value="A2">A2</option>
+    <option value="B1">B1</option>
+    <option value="B2">B2</option>
+  </select>
+  Срок аренды места: <input type="text" name="rentalPeriod" required>
+  Мобильный: <input type="text" name="mobilePhone" required>
+  <button type="submit">Добавить</button>
+</form>
+
+<table id="userData">
+  <thead>
+    <tr>
+      <th>Имя</th>
+      <th>Номер места</th>
+      <th>Срок аренды места</th>
+      <th>Мобильный</th>
+      <th>Действие</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Данные будут добавлены здесь -->
+  </tbody>
+</table>
+
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">×</span>
+    <form id="editForm">
+      Имя: <input type="text" id="editName" required>
+      Номер места: <select id="editParkingSpot" required>
+        <option value="A1">A1</option>
+        <option value="A2">A2</option>
+        <option value="B1">B1</option>
+        <option value="B2">B2</option>
+      </select>
+      Срок аренды места: <input type="text" id="editRentalPeriod" required>
+      Мобильный: <input type="text" id="editMobilePhone" required>
+      <input type="hidden" id="editIndex">
+      <button type="submit">Сохранить изменения</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function loadUserData() {
+  if(localStorage.getItem('userData')) {
+    $('#userData tbody').html(localStorage.getItem('userData'));
+  }
+}
+
+$(document).ready(function(){
+  loadUserData();
+
+  $("#userDataForm").on("submit", function(e){
+    e.preventDefault();
+    var formData = $(this).serializeArray();
+    var userData = '<tr>';
+    $.each(formData, function(i, field){
+      userData += '<td>' + field.value + '</td>';
+    });
+    userData += '<td><button type="button" class="editBtn">Изменить</button><button type="button" class="deleteBtn">Удалить</button></td></tr>';
+
+    $('#userData tbody').append(userData);
+    localStorage.setItem('userData', $('#userData tbody').html());
+    this.reset();
+  });
+
+  $('#userData').on('click', '.deleteBtn', function(){
+    if(confirm("Вы точно хотите удалить эту запись?")) {
+      $(this).closest('tr').remove();
+      localStorage.setItem('userData', $('#userData tbody').html());
+    }
+  });
+
+  $('#userData').on('click', '.editBtn', function(){
+    var $row = $(this).closest('tr');
+    var index = $row.index();
+    var name = $row.find('td:eq(0)').text();
+    var parkingSpot = $row.find('td:eq(1)').text();
+    var rentalPeriod = $row.find('td:eq(2)').text();
+    var mobilePhone = $row.find('td:eq(3)').text();
+
+    $('#editName').val(name);
+    $('#editParkingSpot').val(parkingSpot);
+    $('#editRentalPeriod').val(rentalPeriod);
+    $('#editMobilePhone').val(mobilePhone);
+    $('#editIndex').val(index);
+
+    $('#myModal').css('display', 'block');
+  });
+
+  $('.close').click(function() {
+    $('#myModal').css('display', 'none');
+  });
+
+  $('#editForm').on('submit', function(e) {
+    e.preventDefault();
+    var index = $('#editIndex').val();
+    var updatedName = $('#editName').val();
+    var updatedParkingSpot = $('#editParkingSpot').val();
+    var updatedRentalPeriod = $('#editRentalPeriod').val();
+    var updatedMobilePhone = $('#editMobilePhone').val();
+
+    var $row = $('#userData tbody').find('tr').eq(index);
+    $row.find('td:eq(0)').text(updatedName);
+    $row.find('td:eq(1)').text(updatedParkingSpot);
+    $row.find('td:eq(2)').text(updatedRentalPeriod);
+    $row.find('td:eq(3)').text(updatedMobilePhone);
+
+    localStorage.setItem('userData', $('#userData tbody').html());
+    $('#myModal').css('display', 'none');
+  });
+});
+</script>
+
+</body>
+</html>
